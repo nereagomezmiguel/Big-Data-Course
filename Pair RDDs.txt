@@ -1,0 +1,164 @@
+RDD: resiliente e inmutable colección distribuida de objetos
+	- Resiliente: tolerante a fallos
+	- Inmutable: no podemos modificar un RDD
+	- Distribuido: cada RDD es dividido en múltiples particiones automaticamente
+	- Dataset: fuentes externas o datos en memoria
+Operaciones con RDD:
+	- Transformaciones: operaciones que crean un nuevo RDD (ejemplo:Filter). Tipos:
+		* Dependencias Narrow: cuando cada partición padre es  usada como mucho, por una particion hijo.
+		* Dependencias Wide: cuando cada particion padre es usada por muchas particiones hijo. Cuantas más dependencias Wide haya, más tráfico de datos.
+	- Acciones: operaciones que devuelven un resultado (ejemplo:count). Nunca devuelvem un RDD.
+**Solo se crea una transformación cuando se ejecuta una acción.
+
+
+--------------- Ejercicio 1: exploración de fichero plano 1
+spark-shell --> iniciar la consola
+
+creamos la ruta home/BIT e introducimos la carpeta data_spark
+dentro de la carpeta se encuentra el fichero relatos.txt
+Para ver que hay dentro de dicho archivo:
+	gedit relato.txt
+	cat realto.txt
+
+Creo un RDD llamado relato e introduzco en él el documento de relato.txt
+val relato = sc.textFile("file:/home/BIT/data/relato.txt") ##Aun no se ha creado, ocurrirá cuando se ejecute una acción sobre este RDD
+
+relato.count() #accion count sobre el RDD, ahora ya se ha creado
+relato.collect() #muestra el resultado como un array separando por comas cada linea del archivo
+relato.collect().foreach(println) #muestra el resultado igual que está guardado en el documento
+relato.foreach(println) #muestra el mismo resultado que cuando pones collect antes de foreach() 
+
+exit--> salir de spark
+
+
+--------------- Ejercicio 2: exploración de fichero plano 2
+copiamos la carpeta weblogs en home/BIT/data/weblogs
+cp media/sf_VirtualBox/data_spark/weblogs home/BIT/data
+
+para ver que hay dentro de uno de los archivos de esta carpeta: 
+gedit 2013-11-06.log 
+
+spark-shell --> iniciar la consola
+
+creamos una variable en spark a partir de uno de los ficheros:
+var log= "file:/home/BIT/data/weblogs/2013-09-15.log"
+
+creamos un RDD con el contenido del fichero anterior
+val logs = sc.textFile(log)
+
+creamos un nuevo RDD a partir del anterior que solo contenga las lineas que contienen la cadena de caracteres .jpg
+var jpglogs = logs.filter(x=>x.contains(".jpg"))
+
+vemos las 5 primeras lineas
+jpglogs.take(5)
+jpglogs.take(5).foreach(println)
+var jpglogs2 = logs.filter(x=>x.contains(".jpg")).take(5).foreach(println)
+
+calculamos la longitud de las primeras 5 lineas.
+logs.map(x=>x.length).take(5)
+logs.map(x=>x.size).take(5)
+
+imprimimos las palabras de las 5 primeras lineas
+logs.map(x=>x.split(' ')).take(5)
+
+contamos las palabras del documento que cumpla la condicion de que contenga en la linea ".jpg"
+logs.filter(line=> line.contains(".jpg")).count() 
+jpglogs.count()
+
+mapear el contenifo de logs a un RDD de arrays de palabras de cada linea
+var logwords =logs.map(x=>x.split(' '))
+
+crear un nuevo RDD a partir de logs que contentga solo las ips de cada linea
+var ips = logs.map(x=>x.split(' ')(0))
+
+imprimir las 5 primeras lineas de ips
+ips.take(5)
+
+ips.collect() #devuelve un array
+ips.collect().foreach(println) #devuelve una columna
+
+crear un bucle para visualizar el contenido de las 10 primeras lineas de ips
+for (x <- ips.take(10)) {print(x)}
+
+var ipsbucle = for (x <- ips.take(10)) {print(x)}
+ipsbucle.saveAsTextFile("file:/home/cloudera/iplist_prueba") 
+
+exit --> salir
+ de spark
+
+saveastextfile---> para guardar transformaciones de RDDS
+
+
+--------------- Ejercicio 3: exploracion de un conjunto de ficheros planos en una carpeta
+guardar un rdd que contengas las ips de todos los documentos
+sc.textFile("file:/home/BIT/data/weblogs/*").map(line=>line.split(' ')(0)).saveAsTextFile("file:/home/cloudera/iplist2w2")
+
+crear un RDD a partir de logs que tenga la ip seguida del id de cada usuario 
+var htmllogs= logs.filter(x=>x.contains(".html")).map(line=>(line.split(' ')(0), line.split(' ')(2)))
+
+imprime las 5 primeras lineas del rdd anterior
+htmllogs.take(5).foreach(println)
+
+
+--------------- Ejercicio 4: 
+1-Usando MapReduce, cuenta el número de peticiones de cada usuario, es decir, las veces que cada usuario aparece en una línea de un log. Para ello
+a. Usa un Map para crear un RDD que contenga el par (ID, 1), siendo la clave el ID y el Value el número 1.
+	var logs=sc.textFile("file:/home/BIT/data/weblogs/*")
+	var userreqs = logs.map(line => line.split(' ')).map(words => (words(2),1))
+	userreqs.collect().take(10).foreach(println)
+
+b. Usa un Reduce para sumar los valores correspondientes a cada userid. 
+	var red = userreqs.reduceByKey((v1,v2)=> v1+v2)
+
+2. Muestra los id de usuario y el número de accesos para los 10 usuarios con mayor número de accesos.
+a. Utiliza un map() para intercambiar la Clave por el Valor:
+	val newRed=red.map(campo => campo.swap)
+
+b. Utiliza la función vista en teoría para ordenar un RDD. Ten en cuenta que queremos mostrar los datos en orden descendiente (De mayor a menor número de peticiones).
+Recuerda que el RDD debe estar en la misma forma que al inicio, es decir, con clave: userid y valor: nº de peticiones. El resultado debe ser:
+	newRed.sortByKey(false).map(campo =>campo.swap).take(10).foreach(println)
+
+3. Crea un RDD donde la clave sea el userid y el valor sea una lista de ips a las que el userid se ha conectado (es decir, agrupar las IPs por userID). 
+Ayúdate de la función groupByKey() para conseguirlo.
+		
+	userips.take(10)
+
+extra:
+userips.take(10).foreach{
+x=>println("ID:" + x._1 )
+println("IPS:")
+x._2.foreach(println)};
+
+userips.take(10).foreach{
+x=>println("ID:" + x._1)
+println("IPS:")
+x._2.foreach(println)};
+
+--------------- Ejercicio 5:
+utilizaremos el fichero accounts.csv que tiene el id  que corresponde al id de logs y mas info de los usuarios
+
+Crea una variable que contenga la info de accounts, su clave sea el id y tenga otra columna con el resto de informacion
+var accounts = sc.textFile("file:/home/BIT/data/accounts.csv").map(x=>x.split(',')).map(account=>(account(0),account))
+
+*****
+si quieres guardar una variable en forma RDD
+var nombre_nueva =sc.parallelize(nombre_variable)
+*****
+
+hacer un join entre la tabla de accounts y la de log que tenga como clave el id y este seguido de la informacion del usuario y el numero de visitas
+var union = accounts.join(red)
+
+crear un rdd que contenga el userid, numero de bisitas nombre y apellidos de las 5 primeras lineas
+for (t<- union.take(10)) {println(t._1,t._2._2,t._2._1(3), t._2._1(4))}
+
+
+--------------- Ejercicio 6:
+crear un rdd con los datos de lac uentas con codigo postal como clave
+var accountsByPCode = sc.textFile("file:/home/BIT/data/accounts.csv").map(_.split(',')).keyBy(_(8)) 
+
+crear un rdd de pares con el cod postal de clave y una lista de nombres
+var namesbycode = accountsByPCode.mapValues(values=>values(4) + ',' +values(3)).groupByKey()
+
+ordenar los datos por codigo postal y mostrar los 5 primeros
+namesbycode.sortByKey().take(10).foreach{ case(x,y) => println ("---" + x)
+y.foreach(println)}; 
