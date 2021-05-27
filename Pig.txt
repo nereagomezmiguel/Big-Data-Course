@@ -1,0 +1,24 @@
+pig -x local --> activar la consola de pig
+
+carga de datos:
+data = LOAD '/home/cloudera/ejercicios/pig/datos_pig.txt' AS
+(key:chararray, campana:chararray, fecha:chararray,
+tiempo:chararray, display:chararray, accion:int,
+cpc:int, pais:chararray, lugar:chararray);
+
+esquema de la variable:
+describe data;
+
+result = FILTER data BY pais=='USA'; -->filtrar las filas que tengan como valor de pais USA
+result1 = FILTER result BY key MATCHES '^surf.*'; --> filtrar las filas que tengan en la columna key el sufijo surf
+result2 = order result1 by fecha desc;
+
+variable que tenga las columnas en el siguiente orden:
+ordenado = FOREACH result2 GENERATE campana, fecha, tiempo, key, display, lugar, accion, cpc, pais;
+
+guardamos el contenido de la variable:
+STORE ordenado INTO '/home/cloudera/ejercicios/pig/resultado3';
+
+ruta:
+cd home/cloudera/ejercicios/pig/resultado2/
+cat part-r-00000 | head -n 10

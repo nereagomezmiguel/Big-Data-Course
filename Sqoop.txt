@@ -1,0 +1,44 @@
+mysql -u root -p --> entrar en mysql
+contraseña: cloudera
+
+show databases;
+drop database if exists pruebadb;
+show databases;
+
+create database pruebadb;
+use pruebadb;
+create table tabla_prueba (nombre varchar(30), edad int);
+show tables;
+
+INSERT INTO tabla_prueba VALUES ("Alberto",22);
+INSERT INTO tabla_prueba VALUES ("Luis",23);
+INSERT INTO tabla_prueba VALUES ("Pablo", 24);
+INSERT INTO tabla_prueba VALUES ("Carlos", 25);
+
+select * from tabla_prueba;
+describe tabla_prueba;
+
+---------------------------------
+hive
+drop database if exists prueba_sqoop_hive cascade;
+create database prueba_sqoop_hive;
+use prueba_sqoop_hive;
+
+hadoop fs -ls /user/hive/warehouse
+
+drop table tabla_prueba_hive;
+CREATE TABLE tabla_prueba_hive
+(nombre string,
+edad int
+)
+ROW FORMAT DELIMITED
+STORED AS TEXTFILE;
+select * from tabla_prueba_hive;
+
+
+cd /var/lib/accumulo
+ACCUMULO_HOME='/var/lib/accumulo'
+export ACCUMULO_HOME
+sqoop list-databases --connect jdbc:mysql://localhost --username root --password cloudera
+sqoop list-tables --connect jdbc:mysql://localhost/pruebadb --username root --password cloudera
+sqoop import --connect jdbc:mysql://localhost/pruebadb --table tabla_prueba --username root --password cloudera -m 1 --hive-import --hive-overwrite --hive-table prueba_sqoop_hive.tabla_prueba_hive
