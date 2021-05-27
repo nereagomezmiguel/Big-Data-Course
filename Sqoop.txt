@@ -1,5 +1,5 @@
 mysql -u root -p --> entrar en mysql
-contraseña: cloudera
+contraseña:
 
 show databases;
 drop database if exists pruebadb;
