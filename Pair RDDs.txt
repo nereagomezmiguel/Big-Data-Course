@@ -162,3 +162,52 @@ var namesbycode = accountsByPCode.mapValues(values=>values(4) + ',' +values(3)).
 ordenar los datos por codigo postal y mostrar los 5 primeros
 namesbycode.sortByKey().take(10).foreach{ case(x,y) => println ("---" + x)
 y.foreach(println)}; 
+
+
+--------------- Ejercicio 7: ejercicios opcionales
+En primer lugar borramos la carpeta de shakespeare que ya tenemos en cloudera:
+hdfs dfs -rm -R /user/cloudera/shakespeare
+
+A continuación, extraemos la carpeta de shakespeare que tenemos en la MV
+hdfs dfs -rm -R /user/cloudera/shakespeare
+
+Una vez que hemos descomprimido el archivo, lo copiamos a HDFS
+sudo hdfs dfs -put /media/sf_VirtualBox/shakespeare /user/cloudera
+
+Observamos el contenido de la ruta 
+hdfs dfs -ls /user/cloudera
+
+iniciamos spark:  spark-shell
+
+Contar y ordenar las palabras más repetidas:
+1. Guardamos todos los documentos que hay en la carpeta de shakespeare en un objeto RDD
+	var log = sc.textFile("hdfs://quickstart.cloudera:8020/user/cloudera")
+2. Separamos las palabras de los textos y las almacenamos como palabras por separado
+	var log2 =  log.flatMap(line=>line.split(' '))
+3. Cada palabra la guardamos en un vector clave valor donde el valor sea uno y utilizamos la funcion reduceByKey para unir todas las palabras y sumar el numero de veces que aparecen
+	var log3 = log2.map(word=>(word,1)).reduceByKey(_+_)
+4. Ordenamos todos los pares de clave valor por valor y los mostramos de forma descendente 
+	var log4 = log3.map(word=>word.swap).sortByKey(false).map(value=>value.swap)
+5. Mostramos por pantalla las 100 mas repetidas en orden descendente
+	log4.take(100)
+
+Quitamos las palabras vacías:
+1. exportamos el archivo csv qu econtiene las stop words
+	hdfs dfs -put /media/sf_VirtualBox/stop-word-list.csv /user/cloudera 
+2. nos quedamos solo con los caracterez alfa-numericos
+	val words = log.map(line => line.replaceAll("[â-zA-Z]+",""))
+3. separamos las palabras por espacios
+	val words1 = words.flatMap(line=>line.split(' '))
+4. ponemos en minusculas todas las palabras
+	val words2 = words1.map(word => word.toLowerCase)
+
+5.val words3 = sc.textFile("stop-word-list.csv")
+val words4 = words3.flatMap(line=> line.split(',')) 
+val words5 = words4.map(word=>word.replace(" ",""))
+
+val logs5=logs4.substract(sc.parallelize(Seq(“ “))) 
+val logs6=logs5.substract(stopwords3) 
+val logs7=logs6.map(word => (word,1)).reduceByKey(_+_) 
+val logs8=logs7.map(word => word.swap).sortByKey(false).map(value.swap) 
+val logs9=logs8.filter(word =>word._1.size !=1) 
+Logs9.take(20).foreach(println)
