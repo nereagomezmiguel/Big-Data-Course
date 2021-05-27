@@ -1,0 +1,67 @@
+Abrir Hive: hive
+
+show databases;
+
+drop database if exists cursohivedb cascade;
+
+create database cursohivedb;
+use cursohivedb;
+show tables;
+
+create table iris(
+s_length float,
+s_width float,
+p_length float,
+p_width float,
+clase string
+)
+row format delimited
+fields terminated by
+',';
+
+
+show tables;
+desc iris;
+
+-------------------------------------
+#hadoop fs -mkdir /user/cloudera/hive
+hadoop fs -ls /user/cloudera/hive
+hadoop fs -put /home/cloudera/ejercicios/ejercicios_Hive/iris_completo.txt /user/cloudera/hive
+hadoop fs -ls /user/cloudera/hive
+-------------------------------------
+
+load data inpath '/user/cloudera/hive/iris_completo.txt' into table iris;
+
+Cabeceras de las tablas: set hive.cli.print.header=true;
+
+1. select * from iris;
+
+2. select * from iris limit 5; #mostramos solo las 5 primeras filas
+
+3. select * from iris where s_length>5; #mostramos las flores que tienen más de 5 de longitud
+
+4. select count(*) from iris where s_length>5; #contamos cuantos resultados tiene la query anterior
+
+5. select avg(s_width), clase from iris group by clase; #media de los s_width por clase
+
+6. create table iris2 as (select * from iris where clase!='');
+select * from iris2;
+
+7. insert into table iris2 values (1.0,3.2,4.3,5.7,"Iris-virginica"); #insertar una fila nueva
+
+8. select * from iris2 where s_length=1.0 and s_width=3.2; #comprobamos que hemos introducido la linea
+
+9. select clase, count(*) from iris2 group by clase;#numero de flores de casa tipo
+
+10 .select clase, count(*) from iris2 group by clase having count(*)>45;
+
+11. --select clase,p_length,LEAD(p_length,1,0) OVER (PARTITION BY clase ORDER BY p_length) as Lead from iris2;
+
+12. --select clase,p_length,s_length,p_width,count(p_length) over (partition by p_length) as pl_ct,max(s_length) over (partition by clase) as sl_ct,avg(p_width) over (partition by clase) as sl_av from iris2 order by clase,s_length desc;
+ 
+13. select clase, count(s_length) as n_total , round(avg(s_length),2) as media_s_length, max(s_length) as max_s_length, min(s_length) as min_s_length, 
+round(avg(p_length),2) as media_p_length, max(p_length) as max_p_length, min(p_length) as min_p_length,
+round(avg(s_width),2) as media_s_width, max(s_width) as max_s_width, min(s_width) as min_s_width,
+round(avg(p_width),2) as media_p_width, max(p_width) as max_p_width, min(p_width) as min_p_width
+from iris2 group by clase;
+
