@@ -4,10 +4,13 @@ hadoop fs -rm -r --> borrar una carpeta y su contenido
 hadoop fs -chmod 777 nombre_archivo --> dar permisos a un archivo
 hadoop fs -chmod -R 777 nombre_carpeta --> dar permisos a un archivo
 hadoop fs - put ruta_origen ruta_destino --> copiar un archivo de local a hadoop
+hadoop fs -copyToLocal ruta_hadoop ruta_local --> copiar un archivo de hadoop a local
+hadoop fs -copyFromLocal ruta_local ruta_hadoop --> copiar un archivo de local a hadoop
 hadoop fs -cat ruta_archivo | tail -n num_lineas --> para mostrar las ultimas n lineas de un archivo
 hadoop fs -get ruta_origen ruta_destino --> para copiar un archivo de hadoop a local
 hadoop fs -cat ruta_archivo | less --> para mostrar el contenido de un archivo 
 
+hadoop fs - = hdfs dfs -
 
 jobs:
 mapred job -list --> para mirar los jobs en ejecucion
