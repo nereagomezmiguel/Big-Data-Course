@@ -9,6 +9,7 @@ hadoop fs -copyFromLocal ruta_local ruta_hadoop --> copiar un archivo de local a
 hadoop fs -cat ruta_archivo | tail -n num_lineas --> para mostrar las ultimas n lineas de un archivo
 hadoop fs -get ruta_origen ruta_destino --> para copiar un archivo de hadoop a local
 hadoop fs -cat ruta_archivo | less --> para mostrar el contenido de un archivo 
+hdfs dfs -mkdir /ruta --> crear una carpeta
 
 hadoop fs - = hdfs dfs -
 
